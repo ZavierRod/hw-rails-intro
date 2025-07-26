@@ -4,21 +4,62 @@ class MoviesController < ApplicationController
   # GET /movies or /movies.json
   def index
     @all_ratings = Movie.all_ratings
+    ratings_param = params[:ratings]
 
-    if params[:ratings].nil? || params[:ratings].empty?
-      @ratings_to_show = @all_ratings
+    if ratings_param.nil? || ratings_param.empty?
+      selected_ratings = @all_ratings
     else
-      @ratings_to_show = params[:ratings].keys
+      selected_ratings = ratings_param.keys
     end
-    @ratings_hash = @ratings_to_show.index_with('1')
-    movie_relation = Movie.with_ratings(@ratings_to_show)
 
-    @sort_by = params[:sort_by]
+    sort_param = params[:sort_by]
+
     sort_types = ['title', 'release_date']
-    if @sort_by.nil? || @sort_by.empty? || !sort_types.include?(@sort_by)
-      @movies = movie_relation
+    if sort_param.nil? || sort_param.empty? || !sort_types.include?(sort_param)
+      selected_sort = nil
     else
-      @movies = movie_relation.order(@sort_by => :asc)
+      selected_sort = sort_param
+    end
+
+    if (ratings_param.nil? || ratings_param.empty?) && (sort_param.nil? || sort_param.empty?)
+      if (!session[:ratings].nil? && !session[:ratings].empty?) || (!session[:sort_by].nil? && !session[:sort_by].empty?)
+        session_ratings = session[:ratings]
+        if session_ratings.nil? || session_ratings.empty?
+          safe_ratings = @all_ratings
+        else
+          safe_ratings = session_ratings & @all_ratings
+          if safe_ratings.empty?
+            safe_ratings = @all_ratings
+          end
+        end
+
+        session_sort = session[:sort_by]
+        if session_sort.nil? || session_sort.empty? || !sort_types.include?(session_sort)
+          safe_sort = nil
+        else
+          safe_sort = session_sort
+        end
+        redirect_params = {}
+        redirect_params[:ratings] = safe_ratings.map { |r| [r, '1']}.to_h
+        if !safe_sort.nil?
+          redirect_params[:sort_by] = safe_sort
+        end
+        redirect_to movies_path(redirect_params)
+        return
+      end
+    end
+
+    session[:ratings] = selected_ratings
+    session[:sort_by] = selected_sort
+    @ratings_to_show = selected_ratings
+    @sort_by = selected_sort
+    @ratings_hash = @ratings_to_show.map { |r| [r, '1']}.to_h
+
+    relation = Movie.with_ratings(@ratings_to_show)
+    if @sort_by.nil?
+      @movies = relation
+    else
+      @movies = relation.order(@sort_by => :asc)
     end
     return
   end
