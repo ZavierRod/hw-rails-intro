@@ -11,8 +11,16 @@ class MoviesController < ApplicationController
       @ratings_to_show = params[:ratings].keys
     end
 
-    @movies = Movie.with_ratings(@ratings_to_show)
+    movie_relation = Movie.with_ratings(@ratings_to_show)
 
+    @sort_by = params[:sort_by]
+    sort_types = ['title', 'release_date']
+    if @sort_by.nil? || @sort_by.empty? || !sort_types.include?(@sort_by)
+      @movies = movie_relation
+    else
+      @movies = movie_relation.order(@sort_by => :asc)
+    end
+    return
   end
 
   # GET /movies/1 or /movies/1.json

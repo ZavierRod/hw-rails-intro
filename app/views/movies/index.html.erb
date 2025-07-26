@@ -5,6 +5,15 @@
 
 <h1>Movies</h1>
 <%= form_tag movies_path, method: :get, id: 'ratings_form', local: true do %>
+  <div>
+      <label class="form-label me-2" for="sort_by">Sort by:</label>
+      <%= select_tag :sort_by,
+                    options_for_select([["Title", "title"],
+                                        ["Release date", "release_date"]],
+                                        @sort_by),
+                    id:    "sort_by",
+                    class: "form-select d-inline w-auto" %>
+  </div>
   Include:
   <% @all_ratings.each do |rating| %>
     <div class="form-check  form-check-inline">
