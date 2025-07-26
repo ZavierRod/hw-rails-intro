@@ -10,7 +10,7 @@ class MoviesController < ApplicationController
     else
       @ratings_to_show = params[:ratings].keys
     end
-
+    @ratings_hash = @ratings_to_show.index_with('1')
     movie_relation = Movie.with_ratings(@ratings_to_show)
 
     @sort_by = params[:sort_by]
